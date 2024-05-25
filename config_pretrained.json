@@ -1,0 +1,80 @@
+[
+    {
+        "id": "parameters_1",
+        "epochs": 15,
+        "lr_head": 0.01,
+        "weight_decay": 0.001,
+        "model": "ResNet18",
+        "pretrained": true,
+        "train_backbone": true,
+        "lr_backbone": 0.001,
+        "batch_size": 32,
+        "save_dir": "output/parameters_1_pretrained",
+        "image_dir": "image/parameters_1_pretrained"
+    },
+    {
+        "id": "parameters_2",
+        "epochs": 15,
+        "lr_head": 0.01,
+        "weight_decay": 0.001,
+        "model": "ResNet18",
+        "pretrained": true,
+        "train_backbone": true,
+        "lr_backbone": 0.0001,
+        "save_dir": "output/parameters_2_pretrained",
+        "image_dir": "image/parameters_2_pretrained",
+        "batch_size": 32
+    },
+    {
+        "id": "parameters_3",
+        "epochs": 15,
+        "lr_head": 0.001,
+        "weight_decay": 0.001,
+        "model": "ResNet18",
+        "pretrained": true,
+        "train_backbone": true,
+        "lr_backbone": 0.0001,
+        "save_dir": "output/parameters_3_pretrained",
+        "image_dir": "image/parameters_3_pretrained",
+        "batch_size": 32
+    },
+    {
+        "id": "parameters_4",
+        "epochs": 15,
+        "lr_head": 0.001,
+        "weight_decay": 0.001,
+        "model": "ResNet18",
+        "pretrained": true,
+        "train_backbone": true,
+        "lr_backbone": 0.00001,
+        "save_dir": "output/parameters_4_pretrained",
+        "image_dir": "image/parameters_4_pretrained",
+        "batch_size": 32
+    },
+    {
+        "id": "parameters_5",
+        "epochs": 15,
+        "lr_head": 0.01,
+        "weight_decay": 0.001,
+        "model": "ResNet18",
+        "pretrained": true,
+        "train_backbone": true,
+        "lr_backbone": 0.00001,
+        "save_dir": "output/parameters_5_pretrained",
+        "image_dir": "image/parameters_5_pretrained",
+        "batch_size": 32
+    },
+    {
+        "id": "best_parameters",
+        "epochs": 10,
+        "lr_head": 0.001,
+        "weight_decay": 0.001,
+        "model": "ResNet18",
+        "pretrained": true,
+        "train_backbone": true,
+        "lr_backbone": 0.0001,
+        "save_dir": "output/best_parameters",
+        "image_dir": "image/best_parameters",
+        "batch_size": 32
+    }
+]
