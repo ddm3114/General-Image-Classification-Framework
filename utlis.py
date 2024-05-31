@@ -8,6 +8,8 @@ from torchvision.transforms import ToTensor
 from torch.utils.data import DataLoader
 from torchvision.io import read_image
 from torchvision import transforms
+from torchvision.transforms import ToPILImage
+import matplotlib.pyplot as plt
 if torch.cuda.is_available():
     device = torch.device('cuda')
 
@@ -16,7 +18,21 @@ torch.cuda.set_device(0)
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(True)
 
-def read_image(sample,transform =None):
+def read_image(img_path):
+    img = Image.open(img_path).convert('RGB')
+    img = ToTensor()(img)
+    return img
+
+def show_image(img,save_path):
+    img.squeeze_(0)
+    print(img.shape)
+    to_pil = ToPILImage()
+    img_pil = to_pil(img)
+    plt.imshow(img_pil)
+    img_pil.save(save_path)
+    print(f"Image saved to {save_path}")
+
+def read_sample(sample,transform =None):
     imgs =[]
     labels = []
     for i in range(len(sample[0])):
@@ -47,30 +63,6 @@ transform = transforms.Compose([
     transforms.Resize((224, 224)),  # 将图像的大小调整为 224x224
     transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 使用常用的均值和标准差进行标准化
 ])
-
-import matplotlib.pyplot as plt
-
-def plot(train_loss, test_loss, accuracy_list, image_dir=None):
-    # 创建目标目录（如果不存在）
-    if image_dir:
-        os.makedirs(image_dir, exist_ok=True)
-
-    # 绘制并保存训练和测试损失图
-    plt.figure()
-    plt.plot(train_loss, label='train_loss')
-    plt.plot(test_loss, label='test_loss')
-    plt.legend()
-    plt.title('Train and Test Loss')
-    loss_plot_path = os.path.join(image_dir, 'loss_plot.png') if image_dir else 'loss_plot.png'
-    plt.savefig(loss_plot_path)
-
-    # 绘制并保存准确率图
-    plt.figure()
-    plt.plot(accuracy_list, label='accuracy')
-    plt.legend()
-    plt.title('Accuracy')
-    accuracy_plot_path = os.path.join(image_dir, 'accuracy_plot.png') if image_dir else 'accuracy_plot.png'
-    plt.savefig(accuracy_plot_path)
 
 
 
