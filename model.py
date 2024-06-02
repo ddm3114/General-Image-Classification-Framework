@@ -9,6 +9,10 @@ from torchvision.transforms import ToTensor
 from torch.utils.data import DataLoader
 from torchvision.io import read_image
 from torchvision import transforms
+from transformers import ViTModel
+from torch import nn
+
+import torch.nn.functional as F
 if torch.cuda.is_available():
     device = torch.device('cuda')
 
@@ -16,6 +20,20 @@ torch.cuda.init()
 torch.cuda.set_device(0)
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(True)
+
+class ClassifierHead(nn.Module):
+    def __init__(self, input_dim, hidden_dim, num_classes = 1024, dropout_prob=0.5):
+        super(ClassifierHead, self).__init__()
+        self.fc1 = nn.Linear(input_dim, hidden_dim)
+        self.dropout = nn.Dropout(dropout_prob)
+        self.fc2 = nn.Linear(hidden_dim, num_classes)
+    
+    def forward(self, x):
+        x = self.fc1(x)
+        x = nn.ReLU()(x)
+        x = self.dropout(x)
+        x = self.fc2(x)
+        return x
 
 class ResNet18(torch.nn.Module):
     def __init__(self,pretrained = True,train_backbone = False,num_classes = 200):
@@ -37,53 +55,154 @@ class ResNet50(torch.nn.Module):
     def __init__(self,pretrained = True,train_backbone = False,num_classes = 200):
         super(ResNet50, self).__init__()
         if pretrained:
-            self.resnet50 = resnet50(weights = 'DEFAULT')
+            self.model = resnet50(weights = 'DEFAULT')
         else:
-            self.resnet50 = resnet50()
+            self.model = resnet50()
 
         if train_backbone:
-            for param in self.resnet50.parameters():
+            for param in self.model.parameters():
                 param.requires_grad = True
         else:
-            for param in self.resnet50.parameters():
+            for param in self.model.parameters():
                 param.requires_grad = False
 
-        num_ftrs = self.resnet50.fc.in_features
-        self.resnet50.fc = torch.nn.Linear(num_ftrs, num_classes)        
-        for param in self.resnet50.fc.parameters():
+        num_ftrs = self.model.fc.in_features
+        self.model.fc = ClassifierHead(num_ftrs,1024, num_classes)
+        for param in self.model.fc.parameters():
             param.requires_grad = True
 
     def forward(self, x):
-        x = self.resnet50(x)
+        x = self.model(x)
         return x
 
 class Swin_T(torch.nn.Module):
     def __init__(self,pretrained = True,train_backbone = False,num_classes = 200):
         super(Swin_T, self).__init__()
         if pretrained:
-            self.swin_t = swin_t(weights = Swin_T_Weights.DEFAULT)
+            self.model = swin_t(weights = Swin_T_Weights.DEFAULT)
         else:
-            self.swin_t = swin_t()
+            self.model = swin_t()
         if train_backbone:
-            for param in self.swin_t.parameters():
+            for param in self.model.parameters():
                 param.requires_grad = True
         else:
 
-            for param in self.swin_t.parameters():
+            for param in self.model.parameters():
                 param.requires_grad = False
 
-        num_ftrs = self.swin_t.head.in_features
-        self.swin_t.head = torch.nn.Linear(num_ftrs, num_classes)     
+        num_ftrs = self.model.head.in_features
+        self.model.head =  ClassifierHead(num_ftrs,1024,num_classes)     
 
-        for param in self.swin_t.head.parameters():
+        for param in self.model.head.parameters():
             param.requires_grad = True
 
     def forward(self, x):
-        x = self.swin_t(x)
+        x = self.model(x)
         return x
     
+class BasicBlock(nn.Module):
+
+    def __init__(self, in_channels, out_channels, stride=1):
+        super(BasicBlock, self).__init__()
+        self.conv1 = nn.Conv2d(in_channels, out_channels, kernel_size=3, stride=stride, padding=1, bias=False)
+        self.bn1 = nn.BatchNorm2d(out_channels)
+        self.conv2 = nn.Conv2d(out_channels, out_channels, kernel_size=3, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(out_channels)
+
+    def forward(self, x):
+        identity = x
+        out = self.conv1(x)
+        out = self.bn1(out)
+        out = F.relu(out)
+        out = self.conv2(out)
+        out = self.bn2(out)
+        out += identity
+        out = F.relu(out)
+        return out
+    
+class MyModel(nn.Module):
+    def __init__(self, pretrained = True,train_backbone = False,num_classes=1000):
+        super(MyModel, self).__init__()
+        self.conv1 = nn.Conv2d(3, 64, kernel_size=7, stride=2, padding=3, bias=False)
+        self.bn1 = nn.BatchNorm2d(64)
+        self.layer1 = BasicBlock(64,64)
+
+        self.maxpool = nn.MaxPool2d(kernel_size=3, stride=2, padding=1)
+
+        self.conv2 = nn.Conv2d(64,128, kernel_size=3, stride=1, padding=1, bias=False)
+        self.bn2 = nn.BatchNorm2d(128)
+        self.layer2 = BasicBlock(128, 128)
+
+        self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
+        self.fc = nn.Linear(128, num_classes)
+
+
+    # def _make_layer(self, block, out_channels, blocks, stride=1):
+
+    #     layers = []
+    #     layers.append(block(self.in_channels, out_channels, stride))
+
+    #     return nn.Sequential(*layers)
+
+    def forward(self, x):
+        x = self.conv1(x)
+        x = self.bn1(x)
+        x = F.relu(x)
+        x = self.layer1(x)
+
+        x = self.maxpool(x)
+
+
+        x = self.conv2(x)
+        x = self.bn2
+        x = F.relu(x)
+        x = self.layer2(x)
+
+        x = self.avgpool(x)
+        x = torch.flatten(x, 1)
+        x = self.fc(x)
+        
+        return x
+    
+class baseModel(torch.nn.Module):
+    def __init__(self,pretrained = True,train_backbone = False,num_classes = 200):
+        super(baseModel, self).__init__()
+        if pretrained:
+            self.model = ViTModel.from_pretrained('google/vit-tiny-patch16-224-in21k')
+        else:
+            self.model = ViTModel()
+        if train_backbone:
+            for param in self.model.parameters():
+                param.requires_grad = True
+        else:
+
+            for param in self.model.parameters():
+                param.requires_grad = False
+
+        if self.model.head:
+            num_ftrs = self.model.head.in_features
+            self.model.head = torch.nn.Linear(num_ftrs, num_classes)     
+            for param in self.model.head.parameters():
+                param.requires_grad = True
+        elif self.model.fc:
+            num_ftrs = self.model.head.in_features
+            self.model.head = torch.nn.Linear(num_ftrs, num_classes)     
+            for param in self.model.head.parameters():
+                param.requires_grad = True
+
+    def forward(self, x):
+        x = self.model(x)
+        return x
 if __name__ == "__main__":
+    
     model = Swin_T(pretrained= False)
+    print(model)
+    
     print("swin_t: ", sum(p.numel() for p in model.parameters()))
     model = ResNet50(pretrained= False)
     print("resnet50: ", sum(p.numel() for p in model.parameters()))
+    model = MyModel(num_classes=10)
+    print(model)
+    for name,param in model.named_parameters():
+       print(name)
+       print('-----------------')

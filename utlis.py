@@ -25,7 +25,7 @@ def read_image(img_path):
 
 def show_image(img,save_path):
     img.squeeze_(0)
-    print(img.shape)
+    print('the shape of the image is :',img.shape)
     to_pil = ToPILImage()
     img_pil = to_pil(img)
     plt.imshow(img_pil)
@@ -54,14 +54,12 @@ def read_sample(sample,transform =None):
     imgs = torch.stack(imgs)
     labels = torch.tensor(labels)
 
-    imgs = imgs.to(device)
-    labels = labels.to(device)
     return imgs, labels
 
 transform = transforms.Compose([
     transforms.ToTensor(),  # 将图像转换为张量
-    transforms.Resize((224, 224)),  # 将图像的大小调整为 224x224
-    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 使用常用的均值和标准差进行标准化
+    transforms.Resize((112, 112)),  # 将图像的大小调整为 224x224
+    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 使用常用的均值和标准差进行标准化
 ])
 
 

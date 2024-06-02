@@ -19,49 +19,82 @@ torch.cuda.set_device(0)
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(True)
 import torchvision.transforms as transforms
-from torchvision.datasets import CIFAR100
+from torchvision.datasets import CIFAR100,CIFAR10
 from torch.utils.data import DataLoader
 
 class Augmentation_Dataset:
     def __init__(self,dataset,transform=None):
         self.transform = transform
         self.dataset = dataset
-
+        self.length = int(dataset.__len__()//2)
+        
         if dataset.classes:
             self.num_classes = len(dataset.classes)
         elif dataset.num_classes:
             self.num_classes = dataset.num_classes
         else:
             raise ValueError('Number of classes not found')
-
+        self.cutmix = T.CutMix(num_classes = self.num_classes)
     def __len__(self):
-        return len(self.image_paths)
+        return self.length
 
     def __getitem__(self, idx):
-        image, label = self.dataset.__getitem__(2*idx)
+        
+        img,label = self.augmentation(idx)
         
         
-        if self.transform:
-            image = self.transform(image)
         
-        return image, label
+        return img, label
     
-    def augmentation(self):
-        pass
+    def augmentation(self,idx):
+        imgs = []
+        labels = []
+
+        image, label = self.dataset.__getitem__(2*idx)
+        imgs.append(image)
+        labels.append(label)
+        image, label = self.dataset.__getitem__(2*idx+1)
+        imgs.append(image)
+        labels.append(label)
 
 
+        # to_tensor = ToTensor()
+       
+        labels = torch.tensor(labels)
+        imgs = torch.stack(imgs)
+        img, label = self.cutmix(imgs, labels)
+        return img[0],label[0]
+                  
 
 # 加载CIFAR-100数据集
-train_dataset = CIFAR100(root='./dataset', train=True, download=True, transform = transform)
-print(type(train_dataset))
-test_dataset = CIFAR100(root='./dataset', train=False, download=True, transform=transform)
-num_classes = len(train_dataset.classes)
-print(f"训练集大小: {len(train_dataset)}")
-print(f"测试集大小: {len(test_dataset)}")
-print(f"类别数: {num_classes}")
-# 创建数据加载器
-train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+class CIFAR100_Dataset:
+    def __init__(self,transform = None):
+        train_dataset = CIFAR100(root='./dataset', train=True, download=True, transform =transform)
+        print(type(train_dataset))
+        test_dataset = CIFAR100(root='./dataset', train=False, download=True, transform=transform)
+        num_classes = len(train_dataset.classes)
+        print('CIFAR100 loaded')
+        print(f"训练集大小: {len(train_dataset)}")
+        print(f"测试集大小: {len(test_dataset)}")
+        print(f"类别数: {num_classes}")
+        self.train_dataset = train_dataset
+        self.test_dataset = test_dataset
+        self.num_classes = num_classes
+    
+   
+class CIFAR10_Dataset:
+    def __init__(self,transform = None):
+        train_dataset = CIFAR10(root='./dataset', train=True, download=True, transform =transform)
+        print(type(train_dataset))
+        test_dataset = CIFAR10(root='./dataset', train=False, download=True, transform=transform)
+        num_classes = len(train_dataset.classes)
+        print('CIFAR10 loaded')
+        print(f"训练集大小: {len(train_dataset)}")
+        print(f"测试集大小: {len(test_dataset)}")
+        print(f"类别数: {num_classes}")
+        self.train_dataset = train_dataset
+        self.test_dataset = test_dataset
+        self.num_classes = num_classes
 
 
 # root_path = 'dataset/CUB_200_2011/images/'
@@ -92,14 +125,29 @@ test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
 
 if __name__ == '__main__':
-    cutmix = T.CutMix(num_classes = num_classes)
-    for i, (img, label) in enumerate(train_dataloader):
+    dataset = CIFAR100_Dataset(transform=transform)
+    train_dataset,test_dataset = dataset.train_dataset,dataset.test_dataset
+    num_classes = dataset.num_classes
+    augmented_dataset = Augmentation_Dataset(train_dataset,transform=transform)
+    train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
+    augmented_dataloader = DataLoader(augmented_dataset,batch_size=2,shuffle=True)
+    test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=False)
+
+    # cutmix = T.CutMix(num_classes=num_classes)
+    # for i, (img, label) in enumerate(train_dataloader):
+    #     print(img.shape,label.shape)
+
+    #     image,label = cutmix(img,label)
+    #     img_pth = f'result/image_{i}.png'
+    #     show_image(img[0],img_pth)
+    #     print("label:",label[0])
+    #     break
+
+    for i, (img, label) in enumerate(augmented_dataloader):
         print(img.shape,label.shape)
-        show_image(img[0],'result/original_0.png')
-        show_image(img[1],'result/original_1.png')
-        img, label = cutmix(img, label)
-        print(img.shape,label.shape)
+        
         img_pth = f'result/image_{i}.png'
+        
         show_image(img[0],img_pth)
         print("label:",label[0])
         break
