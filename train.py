@@ -9,7 +9,7 @@ from torchvision import transforms
 from torch.utils.tensorboard import SummaryWriter
 if torch.cuda.is_available():
     device = torch.device('cuda')
-from utlis import read_sample,transform,save_dict
+from utlis import read_sample,transform,save_dict,load_dict
 from model import ResNet18,ResNet50,Swin_T
 from dataset import CIFAR100_Dataset,Augmentation_Dataset
 import json
@@ -23,14 +23,17 @@ torch.cuda.set_device(0)
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(True)
 
-def train(hyperparameters,num_classes,augment = False,save_model=False):
-
+def train(hyperparameters,save_model=False):
+    if torch.cuda.is_available():
+        device = torch.device('cuda')
+        
     args = hyperparameters
     id = args['id']
     dataset = args['dataset']
     augment  = args['augment']
     epochs = args['epochs']
     model = args['model']
+    num_classes = args['num_classes']
     optim = args['optimizer']
     pretrained = args['pretrained']
     print('pretrained:',pretrained)
@@ -41,12 +44,17 @@ def train(hyperparameters,num_classes,augment = False,save_model=False):
     train_backbone = args['train_backbone']
     batch_size =args['batch_size']
     lr_backbone = args['lr_backbone'] if 'lr_backbone' in args else None
-        
+    load_model = True if args['load_dir'] in args else False
+
     writer = SummaryWriter(log_dir=f'runs/{id}')
     #tensorboard --logdir=runs
 
     model = get_model(model= model,pretrained=pretrained,train_backbone=train_backbone,num_classes=num_classes)
     
+    if load_model:
+        model = load_dict(model,hyperparameters)
+
+    model.to(device)
     if augment:
         train_dataloader,test_dataloader,augment_dataloader = get_dataloader(dataset = dataset,batch_size=batch_size,augment = augment)
     else:
@@ -60,7 +68,11 @@ def train(hyperparameters,num_classes,augment = False,save_model=False):
     train_loss = []
     test_loss = []
     accuracy_list = []
-    
+
+    for name, parms in model.named_parameters():
+        print('-->name:', name, '-->grad_requirs:', parms.requires_grad, '--weight', torch.mean(parms.data))
+        # print('-->name:', name, '-->grad_requirs:', parms.requires_grad, '--weight', torch.mean(parms.data),'-->grad_value:', torch.mean(parms.grad)) 
+
     for epoch in range(epochs):
         model.train()
         train_loss_epoch = []
@@ -90,8 +102,13 @@ def train(hyperparameters,num_classes,augment = False,save_model=False):
             accuracy = (output.argmax(1) == label).sum().item()/len(label)
             train_accuracy_epoch.append(accuracy)
 
-            if iter % 100 == 0:
-                print(f'[Training]epoch:{epoch},iter:{iter},loss: {loss.item()}')
+            if iter % 100 == 0 and iter != 0:
+                iter_loss = sum(train_loss_epoch[iter-100:iter])/100
+                print(f'[Training]epoch:{epoch},iter:{iter},loss: {iter_loss}')
+                for name, parms in model.named_parameters():
+                    if parms.grad is None:
+                        raise ValueError(f'[Training]layer:{name} grad is None')
+
             del img
             del label
         
@@ -115,8 +132,9 @@ def train(hyperparameters,num_classes,augment = False,save_model=False):
                 train_accuracy_epoch.append(accuracy)
                 del img
                 del label
-                if iter % 100 == 0:
-                    print(f'[Training auguemted data]epoch:{epoch},iter:{train_iter+iter},loss: {loss.item()/lam}') 
+                if iter % 100 == 0 and iter != 0:
+                    iter_loss = sum(train_loss_epoch[train_iter+iter-100:train_iter+iter])/100
+                    print(f'[Training auguemted data]epoch:{epoch},iter:{train_iter+iter},loss: {iter_loss/lam}') 
 
         print(f'[Train]epoch:{epoch},train loss: {sum(train_loss_epoch)/len(train_loss_epoch)}')
         epoch_loss = sum(train_loss_epoch)/len(train_loss_epoch)
@@ -183,4 +201,6 @@ if __name__ == '__main__':
         configs = json.load(f)
 
     for config in configs:
-        train_loss,test_loss,accuracy_list = train(config,num_classes=100,augment = True,save_model=True)
+        train_loss,test_loss,accuracy_list = train(config,save_model=True)
+
+        

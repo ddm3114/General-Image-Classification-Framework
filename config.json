@@ -1,75 +1,22 @@
 [
     {
-        "id": "parameters_1_swin",
-        "epochs": 15,
-        "lr_head": 0.01,
-        "weight_decay": 0.001,
-        "model": "Swin_T",
+        "id": "parameters_2",
+        "dataset":"CIFAR10",
+        "augment": false,
+        "epochs": 60,
+        "lr_head": 1e-2,
+        "weight_decay": 1e-4,
+        "step_size":8,
+        "gamma":0.5,
+        "model": "baseModel",
+        "num_classes":10,
+        "optimizer":"Adam",
         "pretrained": true,
-        "train_backbone": false,
-        "lr_backbone": 0.001,
+        "train_backbone": true,
+        "lr_backbone": 1e-2,
         "batch_size": 32,
-        "save_dir": "swin/parameters_1"
-    },
-    {
-        "id": "parameters_1_res",
-        "epochs": 15,
-        "lr_head": 0.01,
-        "weight_decay": 0.001,
-        "model": "ResNet34",
-        "pretrained": true,
-        "train_backbone": false,
-        "lr_backbone": 0.001,
-        "save_dir": "res/parameters_1",
-
-        "batch_size": 32
-    },
-    {
-        "id": "parameters_2_swin",
-        "epochs": 15,
-        "lr_head": 0.001,
-        "weight_decay": 0.001,
-        "model": "Swin_T",
-        "pretrained": true,
-        "train_backbone": false,
-        "lr_backbone": 0.0001,
-        "save_dir": "swin/parameters_2",
-        "batch_size": 32
-    },
-    {
-        "id": "parameters_2_res",
-        "epochs": 15,
-        "lr_head": 0.001,
-        "weight_decay": 0.001,
-        "model": "ResNet34",
-        "pretrained": true,
-        "train_backbone": false,
-        "lr_backbone": 0.0001,
-        "save_dir": "res/parameters_2",
-        "batch_size": 32
-    },
-    {
-        "id": "parameters_3_swin",
-        "epochs": 15,
-        "lr_head": 0.01,
-        "weight_decay": 0.001,
-        "model": "Swin_T",
-        "pretrained": true,
-        "train_backbone": false,
-        "lr_backbone": 0.00001,
-        "save_dir": "swin/parameters_3",
-        "batch_size": 32
-    },
-    {
-        "id": "parameters_3_res",
-        "epochs": 10,
-        "lr_head": 0.001,
-        "weight_decay": 0.001,
-        "model": "ResNet34",
-        "pretrained": true,
-        "train_backbone": false,
-        "lr_backbone": 0.00001,
-        "save_dir": "res/parameters_3",
-        "batch_size": 32
+        "load_dir": "",
+        "save_dir": "cnn/parameters_2"
+        
     }
 ]

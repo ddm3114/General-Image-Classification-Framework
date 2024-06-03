@@ -58,8 +58,8 @@ def read_sample(sample,transform =None):
 
 transform = transforms.Compose([
     transforms.ToTensor(),  # 将图像转换为张量
-    transforms.Resize((112, 112)),  # 将图像的大小调整为 224x224
-    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 使用常用的均值和标准差进行标准化
+    #transforms.Resize((112, 112)),  # 将图像的大小调整为 224x224
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 使用常用的均值和标准差进行标准化
 ])
 
 
@@ -71,7 +71,7 @@ def save_dict(model,config):
     print(f'model saved in {config["save_dir"]}')
 
 def load_dict(model,config):
-    model.load_state_dict(torch.load(config['save_dir']))
-    print(f'model loaded from {config["save_dir"]}')
+    model.load_state_dict(torch.load(config['load_dir']))
+    print(f'model loaded from {config["load_dir"]}')
     return model
 

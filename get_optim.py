@@ -11,20 +11,22 @@ def get_optim(model, lr_head =0.01, lr_backbone = 0.001, weight_decay=0.001, tra
         print('*Using Adam optimizer*')
         if linear == 'fc':
             backbone_params = [param for name, param in model.model.named_parameters() if "fc" not in name]
-           
+            fc_params = [param for name, param in model.model.named_parameters() if "fc" in name]
+
             if train_backbone and lr_backbone:
                 
                 optimizer = torch.optim.Adam([{'params': backbone_params, 'lr': lr_backbone},
-                                            {'params': model.model.fc.parameters(), 'lr': lr_head}],
+                                            {'params': fc_params, 'lr': lr_head}],
                                             weight_decay=weight_decay)
             else:
-                optimizer = torch.optim.Adam(model.model.fc.parameters(), lr=lr_head, weight_decay=weight_decay)
+                optimizer = torch.optim.Adam(fc_params, lr=lr_head, weight_decay=weight_decay)
         elif linear == 'head':
             backbone_params = [param for name, param in model.model.named_parameters() if "head" not in name]
+            fc_params = [param for name, param in model.model.named_parameters() if "head" in name]
             if train_backbone and lr_backbone:
                 
                 optimizer = torch.optim.Adam([{'params': backbone_params, 'lr': lr_backbone},
-                                            {'params': model.model.head.parameters(), 'lr': lr_head}],
+                                            {'params': fc_params, 'lr': lr_head}],
                                             weight_decay=weight_decay)
             else:
                 optimizer = torch.optim.Adam(model.model.head.parameters(), lr=lr_head, weight_decay=weight_decay)
@@ -35,19 +37,22 @@ def get_optim(model, lr_head =0.01, lr_backbone = 0.001, weight_decay=0.001, tra
         print('*Using SGD optimizer*')
         if linear == 'fc':
             backbone_params = [param for name, param in model.model.named_parameters() if "fc" not in name]
+            fc_params = [param for name, param in model.model.named_parameters() if "fc" in name]
+
             if train_backbone and lr_backbone:
                 
                 optimizer = torch.optim.SGD([{'params': backbone_params, 'lr': lr_backbone},
-                                            {'params': model.model.fc.parameters(), 'lr': lr_head}],
+                                            {'params': fc_params, 'lr': lr_head}],
                                             weight_decay=weight_decay)
             else:
-                optimizer = torch.optim.SGD(model.model.fc.parameters(), lr=lr_head, weight_decay=weight_decay)
+                optimizer = torch.optim.SGD(fc_params, lr=lr_head, weight_decay=weight_decay)
         elif linear == 'head':
             backbone_params = [param for name, param in model.model.named_parameters() if "head" not in name]
+            fc_params = [param for name, param in model.model.named_parameters() if "head" in name]
             if train_backbone and lr_backbone:
-               
+                
                 optimizer = torch.optim.SGD([{'params': backbone_params, 'lr': lr_backbone},
-                                            {'params': model.model.head.parameters(), 'lr': lr_head}],
+                                            {'params': fc_params, 'lr': lr_head}],
                                             weight_decay=weight_decay)
             else:
                 optimizer = torch.optim.SGD(model.model.head.parameters(), lr=lr_head, weight_decay=weight_decay)
@@ -58,3 +63,17 @@ def get_optim(model, lr_head =0.01, lr_backbone = 0.001, weight_decay=0.001, tra
         raise ValueError(f'Optimizer {optim} is not supported now')
     
     return optimizer
+
+if __name__ == "__main__":
+    from get_model import get_model
+    model = get_model('baseModel',pretrained=False,train_backbone=True,num_classes=10)
+    lr_head = 0.01
+    lr_backbone = 0.001
+    weight_decay = 0.001
+    train_backbone = True
+    optim = 'adam'
+    optimizer = get_optim(model,lr_head,lr_backbone,weight_decay,train_backbone,optim=optim)
+    for name, parms in model.named_parameters():
+        print('-->name:', name, '-->grad_requirs:', parms.requires_grad, '--weight', torch.mean(parms.data))
+        # print('-->name:', name, '-->grad_requirs:', parms.requires_grad, '--weight', torch.mean(parms.data),'-->grad_value:', torch.mean(parms.grad)) 
+   

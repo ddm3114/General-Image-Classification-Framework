@@ -13,6 +13,7 @@ from transformers import ViTModel
 from torch import nn
 
 import torch.nn.functional as F
+import torch.nn.init as init
 if torch.cuda.is_available():
     device = torch.device('cuda')
 
@@ -136,15 +137,12 @@ class MyModel(nn.Module):
         self.avgpool = nn.AdaptiveAvgPool2d((1, 1))
         self.fc = nn.Linear(128, num_classes)
 
+        self._initialize_weights()
 
-    # def _make_layer(self, block, out_channels, blocks, stride=1):
 
-    #     layers = []
-    #     layers.append(block(self.in_channels, out_channels, stride))
-
-    #     return nn.Sequential(*layers)
 
     def forward(self, x):
+        
         x = self.conv1(x)
         x = self.bn1(x)
         x = F.relu(x)
@@ -154,23 +152,39 @@ class MyModel(nn.Module):
 
 
         x = self.conv2(x)
-        x = self.bn2
+        x = self.bn2(x)
         x = F.relu(x)
         x = self.layer2(x)
 
         x = self.avgpool(x)
         x = torch.flatten(x, 1)
         x = self.fc(x)
-        
+
         return x
+    
+    def _initialize_weights(self):
+        for m in self.modules():
+            if isinstance(m, nn.Conv2d):
+                # He 初始化 (Kaiming 初始化)
+                init.kaiming_normal_(m.weight, mode='fan_out', nonlinearity='relu')
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+            elif isinstance(m, nn.Linear):
+                # Xavier 初始化 (Glorot 初始化)
+                init.xavier_normal_(m.weight)
+                if m.bias is not None:
+                    init.constant_(m.bias, 0)
+            elif isinstance(m, nn.BatchNorm2d):
+                init.constant_(m.weight, 1)
+                init.constant_(m.bias, 0)
     
 class baseModel(torch.nn.Module):
     def __init__(self,pretrained = True,train_backbone = False,num_classes = 200):
         super(baseModel, self).__init__()
         if pretrained:
-            self.model = ViTModel.from_pretrained('google/vit-tiny-patch16-224-in21k')
+            self.model = MyModel(num_classes=num_classes)
         else:
-            self.model = ViTModel()
+            self.model = MyModel(num_classes=num_classes)
         if train_backbone:
             for param in self.model.parameters():
                 param.requires_grad = True
@@ -179,20 +193,22 @@ class baseModel(torch.nn.Module):
             for param in self.model.parameters():
                 param.requires_grad = False
 
-        if self.model.head:
+        if hasattr(self.model, 'head'):
             num_ftrs = self.model.head.in_features
             self.model.head = torch.nn.Linear(num_ftrs, num_classes)     
             for param in self.model.head.parameters():
                 param.requires_grad = True
-        elif self.model.fc:
-            num_ftrs = self.model.head.in_features
-            self.model.head = torch.nn.Linear(num_ftrs, num_classes)     
-            for param in self.model.head.parameters():
+        elif hasattr(self.model, 'fc'):
+            num_ftrs = self.model.fc.in_features
+            self.model.fc = torch.nn.Linear(num_ftrs, num_classes)     
+            for param in self.model.fc.parameters():
                 param.requires_grad = True
 
     def forward(self, x):
         x = self.model(x)
         return x
+    
+
 if __name__ == "__main__":
     
     model = Swin_T(pretrained= False)
@@ -201,8 +217,8 @@ if __name__ == "__main__":
     print("swin_t: ", sum(p.numel() for p in model.parameters()))
     model = ResNet50(pretrained= False)
     print("resnet50: ", sum(p.numel() for p in model.parameters()))
-    model = MyModel(num_classes=10)
-    print(model)
-    for name,param in model.named_parameters():
-       print(name)
-       print('-----------------')
+    model = baseModel(num_classes=10,train_backbone=True)
+    for name, parms in model.named_parameters():
+        if parms.requires_grad:
+            print(f"{name}: {parms.data}")
+        #print('-->name:', name, '-->grad_requirs:', parms.requires_grad, '--weight', torch.mean(parms.data))

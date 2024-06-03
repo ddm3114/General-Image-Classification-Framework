@@ -97,57 +97,14 @@ class CIFAR10_Dataset:
         self.num_classes = num_classes
 
 
-# root_path = 'dataset/CUB_200_2011/images/'
-# with open(r'dataset\CUB_200_2011\images.txt', 'r') as f:
-#     images = f.readlines()
-# images = [x.strip().split(' ')[1] for x in images]
-# images = [root_path+x for x in images]
-
-# with open(r'dataset\CUB_200_2011\image_class_labels.txt', 'r') as f:
-#     labels = f.readlines() 
-# labels = [x.strip().split(' ')[1] for x in labels]
-# labels = [int(x)-1 for x in labels]
-# with open(r'dataset\CUB_200_2011\train_test_split.txt', 'r') as f:
-#     train_test = f.readlines()
-# train_test = [x.strip().split(' ')[1] for x in train_test]
-
-# train_images = [images[i] for i in range(len(images)) if train_test[i] == '1']
-# train_labels = [labels[i] for i in range(len(images)) if train_test[i] == '1']
-
-# test_images = [images[i] for i in range(len(images)) if train_test[i] == '0']
-# test_labels = [labels[i] for i in range(len(images)) if train_test[i] == '0']
-# train_dataset = list(zip(train_images, train_labels))
-# test_dataset = list(zip(test_images, test_labels))
-
-# train_dataloader = DataLoader(train_dataset, batch_size=32, shuffle=True)
-# test_dataloader = DataLoader(test_dataset, batch_size=32, shuffle=True)
 
 
 
 if __name__ == '__main__':
-    dataset = CIFAR100_Dataset(transform=transform)
+    dataset = CIFAR10_Dataset(transform=transform)
     train_dataset,test_dataset = dataset.train_dataset,dataset.test_dataset
     num_classes = dataset.num_classes
-    augmented_dataset = Augmentation_Dataset(train_dataset,transform=transform)
     train_dataloader = DataLoader(train_dataset, batch_size=2, shuffle=True)
-    augmented_dataloader = DataLoader(augmented_dataset,batch_size=2,shuffle=True)
     test_dataloader = DataLoader(test_dataset, batch_size=64, shuffle=False)
 
-    # cutmix = T.CutMix(num_classes=num_classes)
-    # for i, (img, label) in enumerate(train_dataloader):
-    #     print(img.shape,label.shape)
 
-    #     image,label = cutmix(img,label)
-    #     img_pth = f'result/image_{i}.png'
-    #     show_image(img[0],img_pth)
-    #     print("label:",label[0])
-    #     break
-
-    for i, (img, label) in enumerate(augmented_dataloader):
-        print(img.shape,label.shape)
-        
-        img_pth = f'result/image_{i}.png'
-        
-        show_image(img[0],img_pth)
-        print("label:",label[0])
-        break

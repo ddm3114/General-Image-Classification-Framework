@@ -1,0 +1,18 @@
+{
+    "id": "parameters_1",
+    "dataset":"CIFAR10",
+    "augment": false,
+    "epochs": 30,
+    "lr_head": 1e-2,
+    "weight_decay": 1e-4,
+    "step_size":5,
+    "gamma":0.5,
+    "model": "baseModel",
+    "num_classes":10,
+    "optimizer":"Adam",
+    "pretrained": true,
+    "train_backbone": true,
+    "lr_backbone": 1e-2,
+    "batch_size": 32,
+    "save_dir": "cnn/parameters_1"
+}

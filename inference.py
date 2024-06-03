@@ -10,7 +10,6 @@ if torch.cuda.is_available():
     device = torch.device('cuda')
 from utlis import read_image,transform,save_dict,plot
 from model import ResNet18
-from dataset import train_dataloader,test_dataloader
 import json
 
 image = ['dataset/CUB_200_2011/images/001.Black_footed_Albatross/Black_Footed_Albatross_0001_796111.jpg']

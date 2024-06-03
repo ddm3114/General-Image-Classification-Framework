@@ -10,7 +10,7 @@ from torch.utils.tensorboard import SummaryWriter
 if torch.cuda.is_available():
     device = torch.device('cuda')
 from utlis import read_sample,transform,save_dict
-from model import ResNet18,ResNet50,Swin_T,MyModel
+from model import ResNet18,ResNet50,Swin_T,baseModel
 from dataset import CIFAR100_Dataset,Augmentation_Dataset
 import json
 import torch.optim.lr_scheduler as lr_scheduler
@@ -29,8 +29,8 @@ def get_model(model,pretrained = False,train_backbone = False,num_classes = 200)
         model = Swin_T(pretrained=pretrained,train_backbone=train_backbone,num_classes=num_classes).to(device)
         print('Swin_T model loaded')
 
-    elif model == 'MyModel':
-        model = MyModel(num_classes=num_classes)
+    elif model == 'baseModel':
+        model = baseModel(num_classes=num_classes,train_backbone=train_backbone)
     else:
         raise ValueError('model not supported')
     
