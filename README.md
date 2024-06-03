@@ -32,7 +32,7 @@
 - 自定义网络的全部参数或者线性分类头（允许分别训练）
 - 预训练网络中的全部参数和线性分类头（允许分别训练）
 ## 使用框架内存在的模型可以只修改config.json
-## 训练使用train.py，推理部分需要自行修改inference.py
+## 训练使用train.py，推理部分需要自行修改inference.py，可视化通过tensorboard实现(不会问gpt)
 ---
 # *希望以后的培养方案少一些图像分类*
 对框架有问题可联系：学邮:21307140101@m.fudan.edu.cn            私人邮箱:latzbnzl@gmail.com
