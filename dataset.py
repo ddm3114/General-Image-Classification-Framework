@@ -1,14 +1,9 @@
 
 import torch
-from torchvision.io import read_image
-from torchvision.models import resnet18,ResNet18_Weights
 import os
 from PIL import Image
-from torchvision.transforms import ToTensor
 from torch.utils.data import DataLoader
-from torchvision.io import read_image
 from torchvision.transforms import v2 as T
-from torchvision import transforms
 from utlis import transform
 from utlis import read_image,show_image
 if torch.cuda.is_available():

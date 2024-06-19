@@ -1,15 +1,12 @@
 
 import torch
-from torchvision.io import read_image
-from torchvision.models import resnet18,ResNet18_Weights
 import os
 from PIL import Image
 from torchvision.transforms import ToTensor
-from torch.utils.data import DataLoader
-from torchvision.io import read_image
 from torchvision import transforms
 from torchvision.transforms import ToPILImage
 import matplotlib.pyplot as plt
+import json
 if torch.cuda.is_available():
     device = torch.device('cuda')
 
@@ -58,7 +55,7 @@ def read_sample(sample,transform =None):
 
 transform = transforms.Compose([
     transforms.ToTensor(),  # 将图像转换为张量
-    transforms.Resize((112, 112)),  # 将图像的大小调整为 224x224
+    transforms.Resize((64,64), interpolation=transforms.InterpolationMode.BILINEAR)
     #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 使用常用的均值和标准差进行标准化
 ])
 
@@ -68,10 +65,16 @@ def save_dict(model,config):
     os.makedirs(config['save_dir'],exist_ok=True)
     save_path = os.path.join(config['save_dir'],'model.pth')
     torch.save(model.state_dict(),save_path)
-    print(f'model saved in {config["save_dir"]}')
+
+    config_path = os.path.join(config['save_dir'], 'config.json')
+    with open(config_path, 'w') as f:
+        json.dump(config, f, indent=4)
+
+    print(f'Model and config saved to {config["save_dir"]}')
 
 def load_dict(model,config):
     model.load_state_dict(torch.load(config['save_dir']))
+    
     print(f'model loaded from {config["save_dir"]}')
     return model
 

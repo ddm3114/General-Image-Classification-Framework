@@ -1,13 +1,9 @@
 import torch
 from torchvision.io import read_image
-from torchvision.models import resnet18,ResNet18_Weights
-import os
-from PIL import Image
-from torchvision.transforms import ToTensor
+
 from torch.utils.data import DataLoader
 
 from torchvision import transforms
-from torch.utils.tensorboard import SummaryWriter
 if torch.cuda.is_available():
     device = torch.device('cuda')
 from utlis import read_sample,transform,save_dict
