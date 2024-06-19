@@ -1,17 +1,11 @@
 import torch
-from torchvision.models import resnet18,ResNet18_Weights
-import os
 from PIL import Image
-from torchvision.transforms import ToTensor
-from torch.utils.data import DataLoader
 
-from torchvision import transforms
+
 from torch.utils.tensorboard import SummaryWriter
 if torch.cuda.is_available():
     device = torch.device('cuda')
 from utlis import read_sample,transform,save_dict,load_dict
-from model import ResNet18,ResNet50,Swin_T
-from dataset import CIFAR100_Dataset,Augmentation_Dataset
 import json
 import torch.optim.lr_scheduler as lr_scheduler
 from get_optim import get_optim
@@ -23,11 +17,12 @@ torch.cuda.set_device(0)
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(True)
 
-def train(hyperparameters,save_model=False):
+def train(hyperparameters):
     if torch.cuda.is_available():
         device = torch.device('cuda')
         
     args = hyperparameters
+
     id = args['id']
     dataset = args['dataset']
     augment  = args['augment']
@@ -44,17 +39,24 @@ def train(hyperparameters,save_model=False):
     train_backbone = args['train_backbone']
     batch_size =args['batch_size']
     lr_backbone = args['lr_backbone'] if 'lr_backbone' in args else None
-    load_model = True if args['load_dir'] in args else False
-
+    hidden_dim = args['hidden_dim'] if 'hidden_dim' in args else None
+    
+    load_model = False
+    save_model = False
+    if 'load_dir' in args and args['load_dir']:
+        load_model = True
+   
+    if 'save_dir' in args and args['save_dir']:
+        save_model = True
+        
     writer = SummaryWriter(log_dir=f'runs/{id}')
     #tensorboard --logdir=runs
 
-    model = get_model(model= model,pretrained=pretrained,train_backbone=train_backbone,num_classes=num_classes)
-    
+    model = get_model(model= model,pretrained=pretrained,train_backbone=train_backbone,hidden_dim=hidden_dim,num_classes=num_classes)
     if load_model:
         model = load_dict(model,hyperparameters)
-
     model.to(device)
+
     if augment:
         train_dataloader,test_dataloader,augment_dataloader = get_dataloader(dataset = dataset,batch_size=batch_size,augment = augment)
     else:
@@ -68,10 +70,10 @@ def train(hyperparameters,save_model=False):
     train_loss = []
     test_loss = []
     accuracy_list = []
-
+    
     for name, parms in model.named_parameters():
-        print('-->name:', name, '-->grad_requirs:', parms.requires_grad, '--weight', torch.mean(parms.data))
-        # print('-->name:', name, '-->grad_requirs:', parms.requires_grad, '--weight', torch.mean(parms.data),'-->grad_value:', torch.mean(parms.grad)) 
+            print('-->name:', name, '-->grad_requirs:', parms.requires_grad, '--weight', torch.mean(parms.data))
+            # print('-->name:', name, '-->grad_requirs:', parms.requires_grad, '--weight', torch.mean(parms.data),'-->grad_value:', torch.mean(parms.grad)) 
 
     for epoch in range(epochs):
         model.train()
@@ -80,6 +82,8 @@ def train(hyperparameters,save_model=False):
         train_accuracy_list = []
         train_iter = 0
         print('Training train data')
+        if epoch % step_size == 0:
+            print(f'[Train]lr changed to {scheduler.get_last_lr()}')
         for iter,sample in enumerate(train_dataloader):
             train_iter= iter
 
@@ -106,7 +110,7 @@ def train(hyperparameters,save_model=False):
                 iter_loss = sum(train_loss_epoch[iter-100:iter])/100
                 print(f'[Training]epoch:{epoch},iter:{iter},loss: {iter_loss}')
                 for name, parms in model.named_parameters():
-                    if parms.grad is None:
+                    if parms.grad is None and parms.requires_grad:
                         raise ValueError(f'[Training]layer:{name} grad is None')
 
             del img
@@ -132,9 +136,8 @@ def train(hyperparameters,save_model=False):
                 train_accuracy_epoch.append(accuracy)
                 del img
                 del label
-                if iter % 100 == 0 and iter != 0:
-                    iter_loss = sum(train_loss_epoch[train_iter+iter-100:train_iter+iter])/100
-                    print(f'[Training auguemted data]epoch:{epoch},iter:{train_iter+iter},loss: {iter_loss/lam}') 
+                if iter % 100 == 0:
+                    print(f'[Training auguemted data]epoch:{epoch},iter:{train_iter+iter},loss: {loss.item()/lam}') 
 
         print(f'[Train]epoch:{epoch},train loss: {sum(train_loss_epoch)/len(train_loss_epoch)}')
         epoch_loss = sum(train_loss_epoch)/len(train_loss_epoch)
@@ -143,8 +146,6 @@ def train(hyperparameters,save_model=False):
         train_loss.append(loss)
         train_accuracy_list.append(epoch_accuracy)
         scheduler.step()
-        if epoch % step_size == 0:
-            print(f'[Train]lr changed to {scheduler.get_last_lr()}')
         
         writer.add_scalar('Training Loss', epoch_loss, epoch)
         writer.add_scalar('Training Accuracy', epoch_accuracy, epoch)
@@ -201,6 +202,4 @@ if __name__ == '__main__':
         configs = json.load(f)
 
     for config in configs:
-        train_loss,test_loss,accuracy_list = train(config,save_model=True)
-
-        
+        train_loss,test_loss,accuracy_list = train(config)
