@@ -11,7 +11,7 @@ import torch.optim.lr_scheduler as lr_scheduler
 from get_optim import get_optim
 from get_dataloader import get_dataloader
 from get_model import get_model
-
+from get_loss import get_loss
 torch.cuda.init()
 torch.cuda.set_device(0)
 torch.backends.cudnn.benchmark = True
@@ -40,7 +40,8 @@ def train(hyperparameters):
     batch_size =args['batch_size']
     lr_backbone = args['lr_backbone'] if 'lr_backbone' in args else None
     hidden_dim = args['hidden_dim'] if 'hidden_dim' in args else None
-    
+    loss_name = args['loss_f']
+
     load_model = False
     save_model = False
     if 'load_dir' in args and args['load_dir']:
@@ -66,7 +67,8 @@ def train(hyperparameters):
 
     scheduler = lr_scheduler.StepLR(optimizer, step_size=step_size, gamma=gamma)
 
-    criterion = torch.nn.CrossEntropyLoss()
+    criterion = get_loss(loss_name = loss_name)
+
     train_loss = []
     test_loss = []
     accuracy_list = []
