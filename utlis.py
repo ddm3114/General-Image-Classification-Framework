@@ -55,8 +55,8 @@ def read_sample(sample,transform =None):
 
 transform = transforms.Compose([
     transforms.ToTensor(),  # 将图像转换为张量
-    transforms.Resize((64,64), interpolation=transforms.InterpolationMode.BILINEAR)
-    #transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 使用常用的均值和标准差进行标准化
+    transforms.Resize((64,64), interpolation=transforms.InterpolationMode.BILINEAR),
+    transforms.Normalize(mean=[0.485, 0.456, 0.406], std=[0.229, 0.224, 0.225])  # 使用常用的均值和标准差进行标准化
 ])
 
 
@@ -73,8 +73,23 @@ def save_dict(model,config):
     print(f'Model and config saved to {config["save_dir"]}')
 
 def load_dict(model,config):
-    model.load_state_dict(torch.load(config['save_dir']))
-    
-    print(f'model loaded from {config["save_dir"]}')
+    load_path = os.path.join(config['load_dir'],'model.pth')
+    pretrained_dict = torch.load(load_path)
+    model_dict = model.state_dict()
+    pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in model_dict and k != 'fc' and k != 'head' and k != 'classifier'}
+    model_dict.update(pretrained_dict)
+    model.load_state_dict(model_dict) 
+    print(pretrained_dict.keys())
+    print(f'model loaded from {load_path}')
+
     return model
 
+train_transforms = transforms.Compose([
+    transforms.Resize((64,64), interpolation=transforms.InterpolationMode.BILINEAR),
+    ToPILImage(),
+    transforms.RandomResizedCrop(size=64),
+    transforms.RandomHorizontalFlip(),
+    transforms.ColorJitter(0.4, 0.4, 0.4, 0.1),
+    transforms.RandomGrayscale(p=0.2),
+    transforms.ToTensor(),
+])

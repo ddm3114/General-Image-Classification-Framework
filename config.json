@@ -1,85 +1,78 @@
 [
     {
-        "id": "1_swin_improved",
+        "id": "contrast_net",
         "dataset":"CIFAR100",
-        "augment": true,
-        "epochs": 24,
-        "lr_head": 0.01,
-        "weight_decay": 0.001,
-        "step_size":3,
-        "gamma":0.316,
-        "model": "Swin_T",
-        "num_classes":100,
-        "hidden_dim": 4096,
-        "optimizer":"Adam",
-        "pretrained": true,
-        "train_backbone": false,
-        "lr_backbone": 0.001,
-        "batch_size": 64,
-        "save_dir": "swin_improved/1_improved",
-        "load_dir": ""
-    },
-    {
-        "id": "1_res_improved",
-        "dataset":"CIFAR100",
-        "augment": true,
-        "epochs": 24,
-        "lr_head": 0.01,
-        "weight_decay": 0.001,
-        "step_size":3,
-        "gamma":0.316,
-        "model": "ResNet50",
-        "num_classes":100,
-        "hidden_dim": 4096,
-        "optimizer":"Adam",
-        "pretrained": true,
-        "train_backbone": false,
-        "lr_backbone": 0.001,
-        "batch_size": 64,
-        "save_dir": "res_improved/1_improved",
-        "load_dir": ""
+        "augment": false,
         
-    },
-    {
-        "id": "2_swin_improved",
-        "dataset":"CIFAR100",
-        "augment": true,
-        "epochs": 24,
-        "lr_head": 0.01,
-        "weight_decay": 0.001,
-        "step_size":6,
-        "gamma":0.316,
-        "model": "Swin_T",
-        "num_classes":100,
-        "hidden_dim": 4096,
+        "model": "ResNet18",
+        "pretrained": false,
         "optimizer":"Adam",
-        "pretrained": true,
-        "train_backbone": false,
-        "lr_backbone": 0.001,
-        "batch_size": 64,
-        "save_dir": "swin_improved/2_improved",
-        "load_dir": ""
-    },
-    {
-        "id": "2_res_improved",
-        "dataset":"CIFAR100",
-        "augment": true,
-        "epochs": 24,
-        "lr_head": 0.01,
-        "weight_decay": 0.001,
-        "step_size":6,
-        "gamma":0.316,
-        "model": "ResNet50",
-        "num_classes":100,
-        "hidden_dim": 4096,
-        "optimizer":"Adam",
-        "pretrained": true,
-        "train_backbone": false,
-        "lr_backbone": 0.001,
-        "batch_size": 64,
-        "save_dir": "res_improved/2_improved",
-        "load_dir": ""
+        "loss_f":"cross_entropy",
 
-       
+        "batch_size": 64,
+        "lr_head": 0.01,
+        "train_backbone": true,
+        "lr_backbone": 0.01,
+        "step_size":5,
+        "gamma":0.316,
+        "weight_decay": 1e-4,  
+
+        "epochs": 25,
+        "num_classes":100,
+        "hidden_dim": 4096,
+
+        "save_dir": "resnet18/contrast_net",
+        "load_dir": "clip/test"
+    },
+    {
+        "id": "imagenet_net",
+        "dataset":"CIFAR100",
+        "augment": false,
+        
+        "model": "ResNet18",
+        "pretrained": true,
+        "optimizer":"Adam",
+        "loss_f":"cross_entropy",
+
+        "batch_size": 64,
+        "lr_head": 0.01,
+        "train_backbone": true,
+        "lr_backbone": 0.01,
+        "step_size":5,
+        "gamma":0.316,
+        "weight_decay": 1e-4,  
+
+        "epochs": 25,
+        "num_classes":100,
+        "hidden_dim": 4096,
+
+        "save_dir": "resnet18/imagenet_net",
+        "load_dir": ""
+    },
+    {
+        "id": "zero_net",
+        "dataset":"CIFAR100",
+        "augment": false,
+        
+        "model": "ResNet18",
+        "pretrained": false,
+        "optimizer":"Adam",
+        "loss_f":"cross_entropy",
+
+        "batch_size": 64,
+        "lr_head": 0.01,
+        "train_backbone": true,
+        "lr_backbone": 0.01,
+        "step_size":5,
+        "gamma":0.316,
+        "weight_decay": 1e-4,  
+
+        "epochs": 25,
+        "num_classes":100,
+        "hidden_dim": 4096,
+
+        "save_dir": "resnet18/zero_net",
+        "load_dir": ""
     }
-]
+
+] 

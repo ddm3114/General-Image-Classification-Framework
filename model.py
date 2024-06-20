@@ -1,6 +1,7 @@
 import torch
 from torchvision.io import read_image
 from torchvision.models import resnet18,ResNet18_Weights
+from torchvision.models import resnet34,ResNet34_Weights
 from torchvision.models import resnet50,ResNet50_Weights
 from torchvision.models import swin_t,Swin_T_Weights
 import os
@@ -22,6 +23,19 @@ torch.cuda.set_device(0)
 torch.backends.cudnn.benchmark = True
 torch.autograd.set_detect_anomaly(True)
 
+# class ClassifierHead(nn.Module):
+#     def __init__(self, in_features,hidden_dim = 1024, num_classes=1024):
+#         super(ClassifierHead, self).__init__()
+#         self.layer = nn.Sequential(
+#             nn.Linear(in_features, 512),
+#             nn.ReLU(),
+#             nn.Linear(512, num_classes)
+#         )
+
+#     def forward(self, x):
+#         x = self.layer(x)
+        
+#         return x
 
 class ClassifierHead(nn.Module):
     def __init__(self, in_features,hidden_dim = 1024, num_classes=1024):
@@ -96,9 +110,9 @@ class baseModel(torch.nn.Module):
                 param.requires_grad = True
 
         elif hasattr(self.model, 'classifier'):
-            num_ftrs = self.model.fc.in_features
-            self.model.fc = ClassifierHead(num_ftrs,hidden_dim,num_classes)     
-            for param in self.model.fc.parameters():
+            num_ftrs = self.model.classifier.in_features
+            self.model.classifier = ClassifierHead(num_ftrs,hidden_dim,num_classes)     
+            for param in self.model.classifier.parameters():
                 param.requires_grad = True
 
     def forward(self, x):
@@ -107,8 +121,19 @@ class baseModel(torch.nn.Module):
     
     def create_model(self,model_name,pretrained):
         if model_name == 'ResNet18':
-            model = resnet18(pretrained=pretrained)
+            if pretrained  == True:
+                model = resnet18(weights = ResNet18_Weights.DEFAULT)
+            else:
+                model = resnet18()
             print('ResNet18 model loaded')
+
+        elif model_name == 'ResNet34':
+            if pretrained == True:
+                model = resnet34(weights = ResNet34_Weights.DEFAULT)
+            else:
+                model = resnet34()
+            print('ResNet34 model loaded')
+
         elif model_name == 'ResNet50':
             if pretrained == True:
                 model = resnet50(weights = 'DEFAULT')
@@ -256,37 +281,6 @@ class MyModel(nn.Module):
                 init.constant_(m.weight, 1)
                 init.constant_(m.bias, 0)
 
-class ClassifierHead(nn.Module):
-    def __init__(self, in_features, hidden_dim = 1024, num_classes=1024):
-        super(ClassifierHead, self).__init__()
-        self.fc1 = nn.Linear(in_features, hidden_dim)
-        self.bn1 = nn.BatchNorm1d(hidden_dim)
-        self.dropout1 = nn.Dropout(0.5)
-        self.fc2 = nn.Linear(hidden_dim, hidden_dim)
-        self.bn2 = nn.BatchNorm1d(hidden_dim)
-        self.dropout2 = nn.Dropout(0.5)
-        self.fc3 = nn.Linear(hidden_dim, num_classes)
-        self.residual = nn.Linear(in_features, num_classes)
-        self._initialize_weights()
-
-    def forward(self, x):
-        identity = self.residual(x)
-        
-        x = self.fc1(x)
-        x = self.bn1(x)
-        x = nn.ReLU()(x)
-        x = self.dropout1(x)
-        
-        x = self.fc2(x)
-        x = self.bn2(x)
-        x = nn.ReLU()(x)
-        x = self.dropout2(x)
-        
-        x = self.fc3(x)
-        
-        x += identity  # Residual connection
-        
-        return x
     
     def _initialize_weights(self):
         for m in self.modules():
@@ -308,14 +302,14 @@ class ClassifierHead(nn.Module):
     
 if __name__ == "__main__":
     
-    model = baseModel(model_name='MyModel',pretrained=False,train_backbone=False,hidden_dim=1024,num_classes=200)   
+    model = baseModel(model_name='ResNet18',pretrained=False,train_backbone=False,hidden_dim=1024,num_classes=200)   
     print(model)
     
-    print("swin_t: ", sum(p.numel() for p in model.parameters()))
+    # print("swin_t: ", sum(p.numel() for p in model.parameters()))
     # model = ResNet50(pretrained= False)
     # print("resnet50: ", sum(p.numel() for p in model.parameters()))
     # model = baseModel(num_classes=10)
     # print(model)
-    for name, parms in model.named_parameters():
-            if parms.requires_grad:
-                print(f"{name}: {parms.data}")
+    # for name, parms in model.named_parameters():
+    #         if parms.requires_grad:
+    #             print(f"{name}: {parms.data}")
