@@ -5,7 +5,8 @@
 ## 计算机视觉：期中作业任务1：
 ### 在[CUB-200-2011]( https://data.caltech.edu/records/65de6-vp158)数据集上从零开始训练新的输出层，并对其余参数使用较小的学习率进行微调。
   使用框架resnet18
-
+## 计算机视觉：期末作业任务1：
+### 比较基于自监督对比学习，imagenet预训练以及完全训练图像分类的表现
 ## 计算机视觉：期末作业任务2：
 ### 在CIFAR-100数据集上比较基于Transformer和CNN的图像分类模型.
   resnet34和swin transfomer
